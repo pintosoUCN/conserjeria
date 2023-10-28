@@ -1,6 +1,9 @@
 package cl.ucn.disc.as.services;
 
 import cl.ucn.disc.as.model.*;
+import com.github.javafaker.Faker;
+import com.github.javafaker.service.FakeValuesService;
+import com.github.javafaker.service.RandomService;
 import io.ebean.Database;
 import io.ebean.PersistenceIOException;
 import io.ebean.Query;
@@ -9,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @Slf4j
 public class SistemaImpl implements Sistema {
@@ -121,5 +126,41 @@ public class SistemaImpl implements Sistema {
         Query<Pago> query = this.database.find(Pago.class);
         query.where().eq("persona.rut", rut);
         return query.findList();
+    }
+
+    @Override
+    public Optional<Persona> getPersona(String rut) {
+        return Optional.empty();
+    }
+
+    @Override
+    public void populate() {
+        //buid the persona
+        {
+            Persona persona = Persona.builder()
+                    .rut("20881033-2")
+                    .nombre("Diego")
+                    .apellidos("Urrutia Astorga")
+                    .email("durrutia@ucn.cl")
+                    .telefono("+56926374859")
+                    .build();
+        }
+        //the faker
+        Locale locale = new Locale("es-CL");
+        FakeValuesService fvs = new FakeValuesService(locale, new RandomService());
+        Faker faker = new Faker(locale);
+
+        //faker
+        for (int i = 0; i < 30; i++) {
+            Persona persona = Persona.builder()
+                    .rut(fvs.bothify("########-#"))
+                    .nombre(faker.name().firstName())
+                    .apellidos(faker.name().lastName())
+                    .email(fvs.bothify("????@gmail.com"))
+                    .telefono(fvs.bothify("+569########"))
+                    .build();
+            this.database.save(persona);
+
+        }
     }
 }

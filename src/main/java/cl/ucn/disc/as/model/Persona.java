@@ -68,9 +68,9 @@ public class Persona extends BaseModel {
          */
         public  Persona build(){
             //validate rut
-            if(!ValidationUtils.isRutValid(this.rut)){
+            /*if(!ValidationUtils.isRutValid(this.rut)){
                 throw new IllegalDomainException("Rut not valid: " + this.rut);
-            }
+            }*/
 
             //validate email
             if (!ValidationUtils.isEmailValid(this.email)){

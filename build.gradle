@@ -1,16 +1,56 @@
+buildscript {
+    ext {
+        ebeanVersion = '13.25.1'
+        sqliteVersion = '3.44.0.0'
+        javalinVersion = '5.6.3'
+
+        lombokVersion = '1.18.30'
+        gsonVersion = '2.10.1'
+        logbackVersion = '1.4.11'
+        commonsLangVersion = '3.14.0'
+        javaFakerVersion = '1.0.2'
+
+        grpcVersion = '1.59.0'
+        protobufVersion = '3.21.12'
+
+        protobufPluginVersion = '0.9.4'
+        versionPluginVersion = '0.50.0'
+    }
+}
+
 plugins {
     id 'idea'
     id 'java'
-    id('io.ebean') version '13.11.0'
-    id('com.github.ben-manes.versions') version '0.48.0'
+    id('io.ebean') version "${ebeanVersion}"
+    id('com.github.ben-manes.versions') version "${versionPluginVersion}"
+    id('com.google.protobuf') version "${protobufPluginVersion}"
 }
 
 group = 'cl.ucn.disc.as'
-version = '0.0.1'
+version = '0.0.5'
 
 repositories {
     mavenLocal()
     mavenCentral()
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+    }
+    clean {
+        delete generatedFilesBaseDir
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
 }
 
 java {
@@ -20,24 +60,12 @@ java {
 }
 
 compileJava {
-    options.release = 17
     options.encoding = 'UTF-8'
-}
-
-ext{
-    ebeanVersion='13.23.1'
-    sqliteVersion = '3.43.2.1'
-    javalinVersion = '5.6.3'
-    lombokVersion = '1.18.30'
-    gsonVersion = '2.10.1'
-    logbackVersion = '1.4.11'
-    commonsLangVersion = '3.13.0'
-    javaFakerVersion = '1.0.2'
 }
 
 dependencies {
     // junit
-    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation platform('org.junit:junit-bom:5.10.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
     // lombok
@@ -59,12 +87,10 @@ dependencies {
     // json
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
-    //faker
-    implementation "com.github.javafaker:javafaker:${javaFakerVersion}"
-
     // web: javalin
     implementation "io.javalin:javalin:${javalinVersion}"
-
+    implementation "com.aayushatharva.brotli4j:brotli4j:1.13.0"
+    implementation "com.nixxcode.jvmbrotli:jvmbrotli:0.2.0"
 
     // lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
@@ -74,8 +100,17 @@ dependencies {
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
 
-    //common-lang3
+    // commons-lang3
     implementation "org.apache.commons:commons-lang3:${commonsLangVersion}"
+
+    // data faker
+    implementation "com.github.javafaker:javafaker:${javaFakerVersion}"
+
+    // gRPC
+    runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
 }
 
@@ -87,4 +122,12 @@ test {
     useJUnitPlatform()
     testLogging.showStandardStreams = true
     testLogging.exceptionFormat = 'full'
+}
+
+// Inform IntelliJ  about the generated code.
+idea {
+    module {
+        sourceDirs += file("src/generated/main/java")
+        sourceDirs += file("src/generated/main/grpc")
+    }
 }

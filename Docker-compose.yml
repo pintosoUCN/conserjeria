@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  javalin-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: javalin-app-container
+    ports:
+      - "8080:7070"
+    environment:
+      SERVER_PORT: "7070"
+      LOG_LEVEL: "info"
+      DATABASE_URL: "jdbc:mysql://database-host:3306/sample-db"
+      DATABASE_USER: "db-username"
+      DATABASE_PASSWORD: "db-password"

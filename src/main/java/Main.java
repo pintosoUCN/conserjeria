@@ -1,40 +1,70 @@
-import cl.ucn.disc.as.grpc.PersonaGrpcServiceImpl;
+import cl.ucn.disc.as.model.Departamento;
+import cl.ucn.disc.as.model.Edificio;
+import cl.ucn.disc.as.services.PersonaGrpcServiceImpl;
+import cl.ucn.disc.as.services.Sistema;
+import cl.ucn.disc.as.services.SistemaImpl;
 import cl.ucn.disc.as.ui.ApiRestServer;
 import cl.ucn.disc.as.ui.WebController;
+import io.ebean.DB;
+import io.ebean.Database;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.javalin.Javalin;
 import lombok.extern.slf4j.Slf4j;
+import io.ebean.DatabaseFactory;
+import io.ebean.config.DatabaseConfig;
+import io.ebean.datasource.DataSourceConfig;
 
 import java.io.IOException;
-import java.util.Optional;
+
 
 @Slf4j
 public final class Main {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        // Start the API REST server
-        log.debug("Starting ApiRest server ..");
-        Javalin app = ApiRestServer.start(7070, new WebController());
+    public static Database getDatabase() {
+        DatabaseConfig config = new DatabaseConfig();
+        config.setName("default");
 
-        // stop the API REST server.
-        // app.stop();
+        DataSourceConfig dataSourceConfig = new DataSourceConfig();
+        dataSourceConfig.setDriver("org.mariadb.jdbc.Driver");
+        dataSourceConfig.setUsername("my-username");
+        dataSourceConfig.setPassword("secret-password-conserjeria-as");
+        dataSourceConfig.setUrl("jdbc:mariadb://localhost:3306/sample-db");
 
-        // Start the gRPC server
-        log.debug("Starting the gRPC server ..");
+        config.setDataSourceConfig(dataSourceConfig);
+
+        config.setDefaultServer(true);
+        config.setRegister(false);
+
+        return DatabaseFactory.create(config);
+    }
+
+    public static void main(String[] args) throws IOException {
+
+
+        log.debug("Starting Main...");
+
+        ApiRestServer.start(7070, new WebController());
+
         Server server = ServerBuilder
                 .forPort(50123)
                 .addService(new PersonaGrpcServiceImpl())
                 .build();
-
         server.start();
 
-        // shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+        log.debug("Done...");
 
-        // wait for the stop
-        server.awaitTermination();
+        Database db = getDatabase();
+        Sistema sistema = new SistemaImpl(db);
 
-        log.debug("Done. :)");
+
+        Edificio edificio = Edificio.builder()
+                .nombre("EDIFICIO")
+                .direccion("DIR1")
+                .build();
+
+        Edificio createdEdificio = sistema.add(edificio);
+
     }
+
+
 }
